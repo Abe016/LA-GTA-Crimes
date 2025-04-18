@@ -4,6 +4,7 @@
 #include <string>
 #include <iomanip>
 #include <map>
+#include "SplayTree.h"
 
 using namespace std;
 
@@ -55,6 +56,7 @@ int main()
     int totalEntries = 500; // for limited print preview, just add && count < totalEntries to while loop
 
     map<int, CrimeRecord> rbTree;
+    SplayTree<int, CrimeRecord> splayTree;
 
     while (getline(file, line) && count < totalEntries)
     {
@@ -75,8 +77,8 @@ int main()
         // insert into map
         rbTree[recordNumber] = rec;
 
-        // insert into splay tree when ready
-        // splayTree.insert(recordNumber, rec);
+        // insert into splay tree
+        splayTree.insert(recordNumber, rec);
 
         // print preview first 500 entries
         cout << "Record #: " << setw(3) << recordNumber << " || Date Occurred: " << setw(15) << rec.date << " || Time Occurred: " << setw(6) << rec.time << " || Location: " << rec.location << '\n';
