@@ -13,7 +13,9 @@ struct CrimeRecord
 {
     string date;
     string time;
+    string area;
     string location;
+
 };
 
 // helpers
@@ -42,62 +44,35 @@ string removeExtraSpace(string check)
 }
 
 // convert to upper case for string comparison
-string toUpper(string s)
+string toUpper(string check)
 {
-    for (size_t i = 0; i < s.size(); ++i)
-        s[i] = static_cast<char>(toupper(static_cast<unsigned char>(s[i])));
-    return s;
+    for (size_t i = 0; i < check.size(); ++i)
+        check[i] = static_cast<char>(toupper(static_cast<unsigned char>(check[i])));
+    return check;
 }
 
-// remove starting numbers of location to help with searching for street
-string removeLeadingNumber(string s) {
+// remove starting numbers of location/space to help with searching for street
+string removeLeadingNumber(string check) {
     size_t i = 0;
-    while (i < s.size() && (isdigit(static_cast<unsigned char>(s[i])) || isspace(static_cast<unsigned char>(s[i])))) {
+    while (i < check.size() && (isdigit(static_cast<unsigned char>(check[i])) || isspace(static_cast<unsigned char>(check[i])))) {
         ++i;
     }
-    return s.substr(i);
+    return check.substr(i);
 }
 
-// search by location
-vector<CrimeRecord> searchByLocation(string loc,map<int, CrimeRecord>& rb,SplayTree<int, CrimeRecord>& sp) {
-    vector<CrimeRecord> matches;
-    string query = toUpper(removeLeadingNumber(removeExtraSpace(loc)));
-
-    // red‑black tree
-    for (map<int, CrimeRecord>::iterator it = rb.begin(); it != rb.end(); ++it)
-    {
-        string candidate = toUpper(removeLeadingNumber(it->second.location));
-        if (candidate == query)
-            matches.push_back(it->second);
-    }
-
-    // splay tree
-    sp.forEach([&](int k, CrimeRecord& rec){
-        string candidate = toUpper(removeLeadingNumber(rec.location));
-        if (candidate == query)
-            matches.push_back(rec);
-    });
-
-    return matches;
-}
-
-
-int main()
-{
+int main() {
+    // load csv file
     ifstream file("CleanedCrimeData.csv");
     if (!file)
     {
         cerr << "file not found, make sure it's in cmake-build-debug folder\n";
         return 1;
     }
-
     // skip header line
     string line;
     getline(file, line);
 
     int count = 0;
-    int totalEntries = 100000; // for limited print preview, just add && count < totalEntries to while loop
-
     map<int, CrimeRecord> rbTree;
     SplayTree<int, CrimeRecord> splayTree;
 
@@ -107,76 +82,139 @@ int main()
         CrimeRecord rec;
         string skip;
 
-        getline(ss, rec.date, ',');
-        getline(ss, rec.time, ',');
-
-        // skip columns 2–6 to get to location column
-        for (int i = 0; i < 4; ++i)
+        // taking in data from csv
+        getline(ss, rec.date, ','); // date occurred
+        getline(ss, rec.time, ','); // time occurred
+        getline(ss, rec.area, ','); // area
+        // skip columns to get to location column
+        for (int i = 0; i < 3; ++i) {
             getline(ss, skip, ',');
+        }
         getline(ss, rec.location, ',');
+        rec.area = removeExtraSpace(rec.area);
         rec.location = removeExtraSpace(rec.location);
 
-        int recordNumber = count;
         // insert into map
-        rbTree[recordNumber] = rec;
-
+        rbTree[count] = rec;
         // insert into splay tree
-        splayTree.insert(recordNumber, rec);
-
-        // print preview first totalEntries
-        // cout << "Record #: "
-        //     << setw(3) << recordNumber
-        //     << " || Date Occurred: " << setw(15)
-        //     << rec.date << " || Time Occurred: "
-        //     << setw(6) << rec.time
-        //     << " || Location: " << rec.location << '\n';
-
+        splayTree.insert(count, rec);
         ++count;
     }
-
     file.close();
 
-    // search test for a specific record with red black tree & splay tree
-    int targetRecord = 58093;
-    cout << "\nSearch Test (Record #" << targetRecord << ")\n";
+    // menu loop
+    while (true) {
+        cout << "\n===== Crime Search Menu =====\n"
+             << "1) Search by Area Name\n"
+             << "2) Search by Street Location\n"
+             << "3) Search by Year (TO DO)\n"
+             << "4) Search by Record Number\n"
+             << "5) Exit\n"
+             << "Choose an option: ";
+        int choice;
+        cin >> choice;
+        if (!cin || choice < 1 || choice > 5) {
+            cin.clear();
+            cin.ignore(1e6,'\n');
+            cout << "Invalid choice.\n";
+            continue;
+        }
+        if (choice == 5) {
+            break;
+        }
+        cin.ignore(1e6,'\n');
 
-    CrimeRecord* resultSplay = splayTree.find(targetRecord);
-    auto resultMap = rbTree.find(targetRecord);
+        // get query string or number
+        string query;
+        int recordNumber = 0;
+        if (choice == 4) {
+            cout << "Enter record number: ";
+            cin >> recordNumber;
+            cin.ignore(1e6,'\n');
+        } else {
+            string prompts[] = {
+                "",
+                "Enter Area Name: ",
+                "Enter Street Location: ",
+                "Enter Year: ",
+                ""
+            };
+            cout << prompts[choice];
+            getline(cin, query);
+        }
 
-    if (resultSplay)
-    {
-        cout << "Splay Tree: \t "
-             << resultSplay->date << " || "
-             << resultSplay->time << " || "
-             << resultSplay->location << '\n';
-    }
-    else
-    {
-        cout << "Splay Tree: Not found.\n";
+        // choose data structure
+        cout << "1) Map\n"
+             << "2) SplayTree:\n"
+             << "Choose Data Structure: ";
+        int ds;
+        cin >> ds;
+        cin.ignore(1e6,'\n');
+        if (ds != 1 && ds != 2) {
+            cout << "Invalid Data Structure Choice.\n";
+            continue;
+        }
+
+        // perform search
+        vector<CrimeRecord> results;
+
+        if (choice == 1) {
+            // by Area
+            string Q = toUpper(removeExtraSpace(query));
+            if (ds == 1) {
+                for (auto &p: rbTree) {
+                    if (toUpper(removeExtraSpace(p.second.area)) == Q)
+                        results.push_back(p.second);
+                }
+            } else {
+                splayTree.forEach([&](int k, CrimeRecord& r){
+                    if (toUpper(removeExtraSpace(r.area)) == Q)
+                        results.push_back(r);
+                });
+            }
+        }
+        else if (choice == 2) {
+            // by Street
+            string Q = toUpper(removeLeadingNumber(removeExtraSpace(query)));
+            if (ds == 1) {
+                for (auto &p: rbTree) {
+                    if (toUpper(removeLeadingNumber(p.second.location)) == Q)
+                        results.push_back(p.second);
+                }
+            } else {
+                splayTree.forEach([&](int k, CrimeRecord& r){
+                    if (toUpper(removeLeadingNumber(r.location)) == Q)
+                        results.push_back(r);
+                });
+            }
+        }
+        else if (choice == 3) {
+            // by Year
+            cout << "Search by Year: (TO DO)\n";
+            continue;
+        }
+        else if (choice == 4) {
+            // by Record Number
+            if (ds == 1) {
+                auto it = rbTree.find(recordNumber);
+                if (it != rbTree.end()) results.push_back(it->second);
+            } else {
+                CrimeRecord* rp = splayTree.find(recordNumber);
+                if (rp) results.push_back(*rp);
+            }
+        }
+
+        // display results
+        cout << "\n===== Results (" << results.size() << ") =====\n";
+        for (auto &r : results) {
+            cout << setw(10) << r.date
+                 << " | " << setw(6)  << r.time
+                 << " | " << setw(12) << r.area
+                 << " | " << r.location << "\n";
+        }
     }
 
-    if (resultMap != rbTree.end())
-    {
-        cout << "Red-Black Tree:  "
-             << resultMap->second.date << " || "
-             << resultMap->second.time << " || "
-             << resultMap->second.location << '\n';
-    }
-    else
-    {
-        cout << "Red-Black Tree:  Not found.\n";
-    }
-
-    cout << "\n";
-
-    // location search test
-    string queryLoc = "S Bentley AV";
-    vector<CrimeRecord> hits = searchByLocation(queryLoc, rbTree, splayTree);
-    cout << "\nIncidents at '" << queryLoc << "'\n";
-    for (size_t i = 0; i < hits.size(); ++i) {
-        cout << hits[i].date << " | " << hits[i].time << '\n';
-    }
-    cout << "Total matches: " << hits.size() << "\n";
+    cout << "Exiting.\n";
 
     return 0;
 }

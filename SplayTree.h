@@ -3,6 +3,8 @@
 #include <iostream>
 #include <stack>
 
+using namespace std;
+
 template <typename K, typename V>
 class SplayTree {
 private:
@@ -74,14 +76,6 @@ private:
         }
     }
 
-    // inorder
-    template <typename Func>
-    void inorder(Node* t, Func f) {
-        if (t == nullptr) return;
-        inorder(t->left,  f);
-        f(t->key, t->value);
-        inorder(t->right, f);
-    }
 public:
     SplayTree() {
         root = nullptr;
@@ -130,19 +124,19 @@ public:
     template <typename Func>
     void forEach(Func f)
     {
-        std::stack<Node*> st;
+        stack<Node*> stack;
         Node* curr = root;
 
-        while (!st.empty() || curr)
+        while (!stack.empty() || curr)
         {
             // go as left as possible
             while (curr)
             {
-                st.push(curr);
+                stack.push(curr);
                 curr = curr->left;
             }
             // visit
-            curr = st.top(); st.pop();
+            curr = stack.top(); stack.pop();
             f(curr->key, curr->value);
             // then right subtree
             curr = curr->right;
