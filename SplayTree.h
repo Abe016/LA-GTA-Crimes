@@ -1,7 +1,3 @@
-//
-// Created by ishaa on 4/18/2025.
-//
-
 #ifndef SPLAYTREE_H
 #define SPLAYTREE_H
 #include <iostream>
@@ -75,6 +71,15 @@ private:
             }
         }
     }
+
+    // inorder
+    template <typename Func>
+    void inorder(Node* t, Func f) {
+        if (t == nullptr) return;
+        inorder(t->left,  f);
+        f(t->key, t->value);
+        inorder(t->right, f);
+    }
 public:
     SplayTree() {
         root = nullptr;
@@ -117,6 +122,13 @@ public:
         } else {
             return nullptr;
         }
+    }
+
+    // inorder
+    template <typename Func>
+    void forEach(Func f)
+    {
+        inorder(root, f);
     }
 };
 

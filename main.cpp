@@ -4,6 +4,7 @@
 #include <string>
 #include <iomanip>
 #include <map>
+#include <vector>
 #include "SplayTree.h"
 
 using namespace std;
@@ -15,6 +16,7 @@ struct CrimeRecord
     string location;
 };
 
+// helpers
 string removeExtraSpace(string check)
 {
     string result;
@@ -39,6 +41,47 @@ string removeExtraSpace(string check)
     return result;
 }
 
+// convert to upper case for string comparison
+string toUpper(string s)
+{
+    for (size_t i = 0; i < s.size(); ++i)
+        s[i] = static_cast<char>(toupper(static_cast<unsigned char>(s[i])));
+    return s;
+}
+
+// remove starting numbers of location to help with searching for street
+string removeLeadingNumber(string s) {
+    size_t i = 0;
+    while (i < s.size() && (isdigit(static_cast<unsigned char>(s[i])) || isspace(static_cast<unsigned char>(s[i])))) {
+        ++i;
+    }
+    return s.substr(i);
+}
+
+// search by location
+vector<CrimeRecord> searchByLocation(string loc,map<int, CrimeRecord>& rb,SplayTree<int, CrimeRecord>& sp) {
+    vector<CrimeRecord> matches;
+    string query = toUpper(removeLeadingNumber(removeExtraSpace(loc)));
+
+    // red‑black tree
+    for (map<int, CrimeRecord>::iterator it = rb.begin(); it != rb.end(); ++it)
+    {
+        string candidate = toUpper(removeLeadingNumber(it->second.location));
+        if (candidate == query)
+            matches.push_back(it->second);
+    }
+
+    // splay tree
+    sp.forEach([&](int k, CrimeRecord& rec){
+        string candidate = toUpper(removeLeadingNumber(rec.location));
+        if (candidate == query)
+            matches.push_back(rec);
+    });
+
+    return matches;
+}
+
+
 int main()
 {
     ifstream file("CleanedCrimeData.csv");
@@ -53,7 +96,7 @@ int main()
     getline(file, line);
 
     int count = 0;
-    int totalEntries = 500; // for limited print preview, just add && count < totalEntries to while loop
+    int totalEntries = 10000; // for limited print preview, just add && count < totalEntries to while loop
 
     map<int, CrimeRecord> rbTree;
     SplayTree<int, CrimeRecord> splayTree;
@@ -80,21 +123,20 @@ int main()
         // insert into splay tree
         splayTree.insert(recordNumber, rec);
 
-        // print preview first 500 entries
-        cout << "Record #: "
-            << setw(3) << recordNumber
-            << " || Date Occurred: " << setw(15)
-            << rec.date << " || Time Occurred: "
-            << setw(6) << rec.time
-            << " || Location: " << rec.location << '\n';
-
+        // print preview first totalEntries
+        // cout << "Record #: "
+        //     << setw(3) << recordNumber
+        //     << " || Date Occurred: " << setw(15)
+        //     << rec.date << " || Time Occurred: "
+        //     << setw(6) << rec.time
+        //     << " || Location: " << rec.location << '\n';
 
         ++count;
     }
 
     file.close();
 
-    // search test to see if find() work
+    // search test for a specific record with red black tree & splay tree
     int targetRecord = 62;
     cout << "\nSearch Test (Record #" << targetRecord << ")\n";
 
@@ -127,6 +169,14 @@ int main()
 
     cout << "\n";
 
+    // location search test
+    string queryLoc = "S Bentley AV";
+    vector<CrimeRecord> hits = searchByLocation(queryLoc, rbTree, splayTree);
+    cout << "\nIncidents at '" << queryLoc << "'\n";
+    for (size_t i = 0; i < hits.size(); ++i) {
+        cout << hits[i].date << " | " << hits[i].time << '\n';
+    }
+    cout << "Total matches: " << hits.size() << "\n";
 
     return 0;
 }
