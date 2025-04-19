@@ -21,6 +21,20 @@ private:
         }
     };
     Node* root;
+
+    // bst insert
+    Node* bstInsert(Node* node, K key, V value) {
+        if (!node) {
+            return new Node(key, value);
+        }
+        if (key < node->key) {
+            node->left  = bstInsert(node->left,  key, value);
+        } else {
+            node->right = bstInsert(node->right, key, value);
+        }
+        return node;
+    }
+
     Node *rightRotate(Node* x) {
         Node* y = x->left;
         x->left = y->right;
@@ -80,6 +94,12 @@ public:
     SplayTree() {
         root = nullptr;
     }
+
+    // initial build for balanced tree
+    void rawInsert(K key, V value) {
+        root = bstInsert(root, key, value);
+    }
+
     void insert(K key, V value) {
         if (root == nullptr) {
             root = new Node(key, value);
