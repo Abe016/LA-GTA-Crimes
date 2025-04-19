@@ -81,10 +81,52 @@ int main()
         splayTree.insert(recordNumber, rec);
 
         // print preview first 500 entries
-        cout << "Record #: " << setw(3) << recordNumber << " || Date Occurred: " << setw(15) << rec.date << " || Time Occurred: " << setw(6) << rec.time << " || Location: " << rec.location << '\n';
+        cout << "Record #: "
+            << setw(3) << recordNumber
+            << " || Date Occurred: " << setw(15)
+            << rec.date << " || Time Occurred: "
+            << setw(6) << rec.time
+            << " || Location: " << rec.location << '\n';
+
+
         ++count;
     }
 
     file.close();
+
+    // search test to see if find() work
+    int targetRecord = 62;
+    cout << "\nSearch Test (Record #" << targetRecord << ")\n";
+
+    CrimeRecord* resultSplay = splayTree.find(targetRecord);
+    auto resultMap = rbTree.find(targetRecord);
+
+    if (resultSplay)
+    {
+        cout << "Splay Tree: \t "
+             << resultSplay->date << " || "
+             << resultSplay->time << " || "
+             << resultSplay->location << '\n';
+    }
+    else
+    {
+        cout << "Splay Tree: Not found.\n";
+    }
+
+    if (resultMap != rbTree.end())
+    {
+        cout << "Red-Black Tree:  "
+             << resultMap->second.date << " || "
+             << resultMap->second.time << " || "
+             << resultMap->second.location << '\n';
+    }
+    else
+    {
+        cout << "Red-Black Tree:  Not found.\n";
+    }
+
+    cout << "\n";
+
+
     return 0;
 }

@@ -100,6 +100,24 @@ public:
         }
         root = newNode;
     }
+
+    // finds key and splays the node to the root
+    V* find(K key)
+    {
+        if (root == nullptr) {
+            return nullptr;
+        }
+
+        // move accessed node to root
+        root = splay(root, key);
+
+        // if found, pointer to stored value
+        if (root->key == key) {
+            return &root->value;
+        } else {
+            return nullptr;
+        }
+    }
 };
 
 #endif //SPLAYTREE_H
