@@ -1,6 +1,8 @@
 #ifndef SPLAYTREE_H
 #define SPLAYTREE_H
 #include <iostream>
+#include <stack>
+
 template <typename K, typename V>
 class SplayTree {
 private:
@@ -124,11 +126,27 @@ public:
         }
     }
 
-    // inorder
+    // iterative inorder traversal
     template <typename Func>
     void forEach(Func f)
     {
-        inorder(root, f);
+        std::stack<Node*> st;
+        Node* curr = root;
+
+        while (!st.empty() || curr)
+        {
+            // go as left as possible
+            while (curr)
+            {
+                st.push(curr);
+                curr = curr->left;
+            }
+            // visit
+            curr = st.top(); st.pop();
+            f(curr->key, curr->value);
+            // then right subtree
+            curr = curr->right;
+        }
     }
 };
 

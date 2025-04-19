@@ -96,12 +96,12 @@ int main()
     getline(file, line);
 
     int count = 0;
-    int totalEntries = 10000; // for limited print preview, just add && count < totalEntries to while loop
+    int totalEntries = 100000; // for limited print preview, just add && count < totalEntries to while loop
 
     map<int, CrimeRecord> rbTree;
     SplayTree<int, CrimeRecord> splayTree;
 
-    while (getline(file, line) && count < totalEntries)
+    while (getline(file, line))
     {
         stringstream ss(line);
         CrimeRecord rec;
@@ -137,7 +137,7 @@ int main()
     file.close();
 
     // search test for a specific record with red black tree & splay tree
-    int targetRecord = 62;
+    int targetRecord = 58093;
     cout << "\nSearch Test (Record #" << targetRecord << ")\n";
 
     CrimeRecord* resultSplay = splayTree.find(targetRecord);
