@@ -60,6 +60,16 @@ string removeLeadingNumber(string check) {
     return check.substr(i);
 }
 
+// recursively insert middle, then left/right
+template<typename K, typename V>
+void buildBalanced(SplayTree<K,V>& tree, const vector<pair<K,V>>& data, int low, int high) {
+    if (low > high) return;
+    int mid = low + (high - low) / 2;
+    tree.rawInsert(data[mid].first, data[mid].second);
+    buildBalanced(tree, data, low, mid - 1);
+    buildBalanced(tree, data, mid + 1, high);
+}
+
 int main() {
     // load csv file
     ifstream file("CleanedCrimeData.csv");
@@ -74,7 +84,7 @@ int main() {
 
     int count = 0;
     map<int, CrimeRecord> rbTree;
-    SplayTree<int, CrimeRecord> splayTree;
+    vector<pair<int,CrimeRecord>> allRecords;
 
     while (getline(file, line))
     {
@@ -97,10 +107,14 @@ int main() {
         // insert into map
         rbTree[count] = rec;
         // insert into splay tree
-        splayTree.insert(count, rec);
+        allRecords.push_back(make_pair(count, rec));
         ++count;
     }
     file.close();
+
+    // build balanced splay tree
+    SplayTree<int,CrimeRecord> splayTree;
+    buildBalanced(splayTree, allRecords, 0, int(allRecords.size()) - 1);
 
     // menu loop
     while (true) {
@@ -207,10 +221,10 @@ int main() {
         // display results
         cout << "\n===== Results (" << results.size() << ") =====\n";
         for (auto &r : results) {
-            cout << setw(10) << r.date
+            cout << setw(15) << r.date
                  << " | " << setw(6)  << r.time
                  << " | " << setw(12) << r.area
-                 << " | " << r.location << "\n";
+                 << " | " << setw(20) << r.location << "\n";
         }
     }
 
