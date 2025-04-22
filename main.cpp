@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 #include "SplayTree.h"
+#include <chrono>
 
 using namespace std;
 
@@ -15,6 +16,7 @@ struct CrimeRecord
     string time;
     string area;
     string location;
+    int year;
 
 };
 
@@ -40,6 +42,11 @@ string removeExtraSpace(string check)
             inSpace = false;
         }
     }
+
+    // Trim leading and trailing space
+    result.erase(0, result.find_first_not_of(' '));
+    result.erase(result.find_last_not_of(' ') + 1);
+
     return result;
 }
 
@@ -60,6 +67,23 @@ string removeLeadingNumber(string check) {
     return check.substr(i);
 }
 
+// get the year from the date of crime occurance
+int getYear(string date)
+{
+    size_t firstSlash = date.find('/');
+    if (firstSlash == string::npos) {
+        return -1;
+    }
+    size_t secondSlash = date.find('/', firstSlash + 1);
+    if (secondSlash == string::npos) {
+        return -1;
+    }
+
+    size_t spaceAfterYear = date.find(' ', secondSlash);
+    string yearStr = date.substr(secondSlash + 1, spaceAfterYear - secondSlash - 1);
+
+    return stoi(yearStr);
+}
 // recursively insert middle, then left/right
 template<typename K, typename V>
 void buildBalanced(SplayTree<K,V>& tree, const vector<pair<K,V>>& data, int low, int high) {
@@ -83,6 +107,8 @@ int main() {
     getline(file, line);
 
     int count = 0;
+
+    // red black tree implementation as a map
     map<int, CrimeRecord> rbTree;
     vector<pair<int,CrimeRecord>> allRecords;
 
@@ -103,6 +129,7 @@ int main() {
         getline(ss, rec.location, ',');
         rec.area = removeExtraSpace(rec.area);
         rec.location = removeExtraSpace(rec.location);
+        rec.year = getYear(rec.date);
 
         // insert into map
         rbTree[count] = rec;
@@ -119,12 +146,14 @@ int main() {
     // menu loop
     while (true) {
         cout << "\n===== Crime Search Menu =====\n"
-             << "1) Search by Area Name\n"
+             << "Search for grand theft auto crimes in the LA area\n"
+             << "Results will be shown as: Date | Time | Area Name | Street Location\n"
+             << "\n1) Search by Area Name\n"
              << "2) Search by Street Location\n"
-             << "3) Search by Year (TO DO)\n"
-             << "4) Search by Record Number\n"
+             << "3) Search by Year\n"
+             << "4) Search by Record Number (0-122091)\n"
              << "5) Exit\n"
-             << "Choose an option: ";
+             << "\nChoose an option: ";
         int choice;
         cin >> choice;
         if (!cin || choice < 1 || choice > 5) {
@@ -159,7 +188,7 @@ int main() {
 
         // choose data structure
         cout << "1) Map\n"
-             << "2) SplayTree:\n"
+             << "2) SplayTree\n"
              << "Choose Data Structure: ";
         int ds;
         cin >> ds;
@@ -171,6 +200,9 @@ int main() {
 
         // perform search
         vector<CrimeRecord> results;
+
+        using namespace std::chrono;
+        auto start = steady_clock::now();
 
         if (choice == 1) {
             // by Area
@@ -204,8 +236,25 @@ int main() {
         }
         else if (choice == 3) {
             // by Year
-            cout << "Search by Year: (TO DO)\n";
-            continue;
+            string Q = removeExtraSpace(query);
+            int year = stoi(Q);
+            if (ds == 1)
+            {
+                for (auto &p: rbTree)
+                {
+                    if(p.second.year == year)
+                    {
+                        results.push_back(p.second);
+                    }
+                }
+            }
+            else
+            {
+                splayTree.forEach([&](int k, CrimeRecord& r){
+                    if (r.year == year)
+                        results.push_back(r);
+                });
+            }
         }
         else if (choice == 4) {
             // by Record Number
@@ -218,6 +267,9 @@ int main() {
             }
         }
 
+        auto end = steady_clock::now();
+        auto duration = duration_cast<nanoseconds>(end - start);
+
         // display results
         cout << "\n===== Results (" << results.size() << ") =====\n";
         for (auto &r : results) {
@@ -226,6 +278,8 @@ int main() {
                  << " | " << setw(12) << r.area
                  << " | " << setw(20) << r.location << "\n";
         }
+        cout << "Search completed in " << duration.count() << " ns.\n";
+        cout << "\n===== Results (" << results.size() << ") =====\n";
     }
 
     cout << "Exiting.\n";
