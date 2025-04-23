@@ -1,4 +1,4 @@
-<H1> COP3530 - Project 3 </h1>
+<H1> COP3530 - Project 3 - Ishaan Desai, Minh Pham, Rahul Sai Boggavarapu </h1>
 This is the template for Project 3 repositories. It includes all the assignment instructions and documentation to help you use GitHub.
 
 <h2> Table of Contents </h2>
